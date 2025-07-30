@@ -1,0 +1,158 @@
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: ../organizations/ordererOrganizations/auto.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+    OrdererEndpoints:
+      - orderer.auto.com:7050
+  - &Uac
+    Name: UacMSP
+    ID: UacMSP
+    MSPDir: ../organizations/peerOrganizations/uac.auto.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('UacMSP.admin', 'UacMSP.peer', 'UacMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('UacMSP.admin', 'UacMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('UacMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('UacMSP.peer')"
+  - &Ustim
+    Name: UstimMSP
+    ID: UstimMSP
+    MSPDir: ../organizations/peerOrganizations/ustim.auto.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('UstimMSP.admin', 'UstimMSP.peer', 'UstimMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('UstimMSP.admin', 'UstimMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('UstimMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('UstimMSP.peer')"
+
+  - &Mvd
+    Name: MvdMSP
+    ID: MvdMSP
+    MSPDir: ../organizations/peerOrganizations/up.auto.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('MvdMSP.admin', 'MvdMSP.peer', 'MvdMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('MvdMSP.admin', 'MvdMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('MvdMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('MvdMSP.peer')"
+
+Capabilities:  
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_5: true
+    
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  Addresses:
+    - orderer.auto.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  ThreeOrgsChannel:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      OrdererType: etcdraft
+      EtcdRaft:
+        Consenters:
+          - Host: orderer.auto.com
+            Port: 7050
+            ClientTLSCert: ../organizations/ordererOrganizations/auto.com/orderers/orderer.auto.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/auto.com/orderers/orderer.auto.com/tls/server.crt
+      Organizations:
+        - *OrdererOrg
+      Capabilities: *OrdererCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Uac
+        - *Ustim
+        - *Mvd
+      Capabilities: *ApplicationCapabilities
