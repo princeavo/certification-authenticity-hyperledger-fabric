@@ -25,7 +25,7 @@ Organizations:
         Rule: "OR('UacMSP.admin', 'UacMSP.peer', 'UacMSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('UacMSP.admin', 'UacMSP.client')"
+        Rule: "OR('UacMSP.admin','UacMSP.peer','UacMSP.client')"
       Admins:
         Type: Signature
         Rule: "OR('UacMSP.admin')"
